@@ -119,6 +119,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .key{min-height:60px;border-radius:16px;border:2px solid var(--line);background:var(--paper);font-family:var(--display);font-size:1.7rem;font-weight:800;box-shadow:0 4px 0 var(--line)}
 .key:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.answer.line{flex-wrap:wrap;gap:8px;justify-content:flex-start;padding:10px;font-size:1.25rem}
+.tok{min-height:52px;padding:6px 16px;border-radius:14px;border:2px solid var(--line);background:var(--paper);font-family:var(--body);font-weight:600;font-size:1.25rem;box-shadow:0 4px 0 var(--line)}
+.tok.on{border-color:var(--c,var(--toan));background:var(--cb,var(--toan-bg));box-shadow:0 4px 0 var(--c,var(--toan))}
 .fb{border-radius:16px;padding:12px 14px;font-weight:600}
 .fb.ok{background:var(--good-bg);color:var(--good)} .fb.no{background:var(--warn-bg);color:var(--red)}
 .fb.info{background:var(--paper);color:var(--ink-soft);border:2px dashed var(--line)}
@@ -200,6 +203,43 @@ function genKgL(){const k=rnd(0,3);let q,ans,ex;
   else{const a=rnd(3,9),b=rnd(3,9);q=`Thùng thứ nhất có ${a} l nước. Thùng thứ hai có ${b} l nước. Cả hai thùng có bao nhiêu lít nước?`;ans=a+b;ex=`${a} l + ${b} l = ${ans} l.`}
   return {type:'num',q,say:q.replace(/ kg/g,' ki-lô-gam').replace(/ l /g,' lít '),ans,hint:'Con đọc lại đề: "cả hai" là gộp lại, "còn" là bớt đi.',explain:ex}}
 
+/* ===== Toán: dạng đổi mới và nâng cao ===== */
+function expr(max){const add=Math.random()<.5;let a,b;
+  if(max<=20){if(add){a=rnd(3,9);b=rnd(3,9)}else{a=rnd(11,18);b=rnd(2,9)}}
+  else{if(add){a=rnd(12,55);b=rnd(6,38)}else{a=rnd(40,95);b=rnd(6,35)}}
+  return add?{s:`${a} + ${b}`,v:a+b,w:`${a} cộng ${b}`}:{s:`${a} − ${b}`,v:a-b,w:`${a} trừ ${b}`}}
+function genThieu(max){const a=max<=20?rnd(6,9):rnd(15,58),b=max<=20?rnd(11-a,9):rnd(6,38);
+  return Math.random()<.5
+   ?{type:'num',big:true,q:`${a} + ? = ${a+b}`,say:`${a} cộng mấy thì bằng ${a+b}?`,ans:b,hint:`Con lấy ${a+b} trừ ${a}.`,explain:`${a+b} − ${a} = ${b}. Vậy ${a} + ${b} = ${a+b}.`}
+   :{type:'num',big:true,q:`? − ${b} = ${a}`,say:`Số nào trừ ${b} thì bằng ${a}?`,ans:a+b,hint:`Con lấy ${a} cộng ${b}.`,explain:`${a} + ${b} = ${a+b}. Vậy ${a+b} − ${b} = ${a}.`}}
+function genSoSanh(max){const L=expr(max);let R;
+  if(Math.random()<.5){R=expr(max)}else{const v=Math.max(0,L.v+pick([0,0,1,-1,2,-2]));R={s:String(v),v,w:String(v),plain:true}}
+  const ans=L.v>R.v?'>':L.v<R.v?'<':'=',word=ans==='>'?'lớn hơn':ans==='<'?'bé hơn':'bằng';
+  return {type:'mc',fixed:true,big:true,q:`${L.s} … ${R.s}`,say:`Con so sánh ${L.w} và ${R.w}, rồi chọn dấu lớn hơn, bé hơn hoặc bằng.`,opts:['>','<','='],ans,hint:'Con tính kết quả từng bên rồi mới so sánh.',explain:`${L.s} = ${L.v}${R.plain?'':`, ${R.s} = ${R.v}`}. ${L.v} ${word} ${R.v}.`}}
+function genDungSai(max){const e=expr(max),ok=Math.random()<.5,shown=ok?e.v:e.v+pick([1,2,10]);
+  return {type:'mc',fixed:true,q:`${e.s} = ${shown}. Đúng hay sai?`,say:`${e.w} bằng ${shown}. Đúng hay sai?`,opts:['Đúng','Sai'],ans:ok?'Đúng':'Sai',hint:'Con tự tính lại rồi so với kết quả.',explain:`${e.s} = ${e.v}.`}}
+function genDay(max){const up=Math.random()<.7,k=max<=20?pick([2,3]):pick([5,10]),s=max<=20?rnd(1,4):rnd(5,40);
+  const seq=[0,1,2,3,4].map(i=>s+i*k);if(!up)seq.reverse();const shown=seq.slice(0,4).join(', ');
+  return {type:'num',big:true,q:`${shown}, ?`,say:`Con tìm số tiếp theo của dãy số: ${shown}.`,ans:seq[4],hint:'Con xem mỗi số hơn hay kém số đứng trước bao nhiêu.',explain:`Mỗi số ${up?'hơn':'kém'} số đứng trước ${k} đơn vị. Số tiếp theo là ${seq[4]}.`}}
+function genHaiBuoc(max){const a=max<=20?rnd(5,9):rnd(15,40),b=max<=20?rnd(3,8):rnd(8,25),c=max<=20?rnd(2,6):rnd(6,20);
+  const [x,thing,plus,minus]=pick([['Lan','cái kẹo','Mẹ cho thêm','Lan cho em'],['Nam','viên bi','Bố mua thêm','Nam cho bạn'],['Hà','nhãn vở','Cô thưởng thêm','Hà tặng bạn']]);
+  const q=`${x} có ${a} ${thing}. ${plus} ${b} ${thing}. ${minus} ${c} ${thing}. Hỏi ${x} còn bao nhiêu ${thing}?`;
+  return {type:'num',q,say:q,ans:a+b-c,hint:'Con tính từng bước: thêm vào trước, rồi bớt đi.',explain:`${a} + ${b} = ${a+b}, rồi ${a+b} − ${c} = ${a+b-c}. ${x} còn ${a+b-c} ${thing}.`}}
+function genTimSo(max){const b=max<=20?rnd(3,9):rnd(8,35),x=max<=20?rnd(4,11):rnd(12,55);
+  if(Math.random()<.5){const q=`Tìm một số, biết số đó cộng với ${b} thì được ${x+b}.`;return {type:'num',q,say:q,ans:x,hint:`Con lấy ${x+b} trừ ${b}.`,explain:`${x+b} − ${b} = ${x}. Số cần tìm là ${x}.`}}
+  const q=`Tìm một số, biết số đó trừ đi ${b} thì còn ${x}.`;return {type:'num',q,say:q,ans:x+b,hint:`Con lấy ${x} cộng ${b}.`,explain:`${x} + ${b} = ${x+b}. Số cần tìm là ${x+b}.`}}
+function genDoSo(){const t=rnd(1,6),k=rnd(1,3),ans=t*10+t+k;
+  const q=`Tớ là số có hai chữ số. Chữ số hàng chục của tớ là ${t}. Chữ số hàng đơn vị lớn hơn chữ số hàng chục ${k} đơn vị. Tớ là số nào?`;
+  return {type:'num',q,say:q,ans,hint:`Con tìm chữ số hàng đơn vị trước: ${t} thêm ${k}.`,explain:`Chữ số hàng đơn vị là ${t} + ${k} = ${t+k}. Số đó là ${ans}.`}}
+function genNguoc(){const a=rnd(9,18),b=rnd(3,7),more=Math.random()<.5;
+  const [x,y,thing]=pick([['Lan','Mai','quyển vở'],['Nam','Việt','viên bi'],['Hà','Bình','bông hoa']]);
+  const q=`${x} có ${a} ${thing}. ${x} có ${more?'nhiều hơn':'ít hơn'} ${y} ${b} ${thing}. Hỏi ${y} có bao nhiêu ${thing}?`,ans=more?a-b:a+b;
+  return {type:'num',q,say:q,ans,hint:more?`${x} nhiều hơn ${y}, nghĩa là ${y} ít hơn ${x}.`:`${x} ít hơn ${y}, nghĩa là ${y} nhiều hơn ${x}.`,explain:`${a} ${more?'−':'+'} ${b} = ${ans}. ${y} có ${ans} ${thing}.`}}
+function genKgHard(){const a=rnd(8,15),b=rnd(2,6),kg=Math.random()<.5,ans=2*a-b;
+  const q=kg?`Bao gạo nặng ${a} kg. Bao ngô nhẹ hơn bao gạo ${b} kg. Hỏi cả hai bao nặng bao nhiêu ki-lô-gam?`:`Can to chứa ${a} l nước. Can nhỏ chứa ít hơn can to ${b} l. Hỏi cả hai can chứa bao nhiêu lít nước?`;
+  return {type:'num',q,say:q.replace(/ kg/g,' ki-lô-gam').replace(/ l /g,' lít ').replace(/ l\./g,' lít.'),ans,hint:'Con tìm cái thứ hai trước, rồi mới cộng cả hai.',
+   explain:kg?`Bao ngô nặng ${a} − ${b} = ${a-b} kg. Cả hai bao nặng ${a} + ${a-b} = ${ans} kg.`:`Can nhỏ chứa ${a} − ${b} = ${a-b} l. Cả hai can chứa ${a} + ${a-b} = ${ans} l.`}}
+
 /* ===== Tiếng Việt: ngân hàng câu tự soạn (đáp án đúng viết đầu, khi hiện sẽ xáo trộn) ===== */
 const mc=(q,opts,hint,explain)=>({type:'mc',q,opts,ans:opts[0],hint,explain});
 const TV={
@@ -269,6 +309,119 @@ function enRound(words){const qs=[];
   });
   return shuffle(qs)}
 
+/* ===== Tiếng Việt: bài sinh từ danh sách từ, mỗi lần một khác ===== */
+const pickN=(a,n)=>shuffle(a).slice(0,n);
+const mcq=(q,opts,ans,hint,explain,extra)=>Object.assign({type:'mc',q,opts,ans,hint,explain},extra||{});
+const CT=[
+ {o:['c','k'],rule:'Trước i, e, ê ta viết k. Trước các âm khác ta viết c.',w:[['cái …éo','k'],['que …em','k'],['con …iến','k'],['cái …ính','k'],['…ể chuyện','k'],['thước …ẻ','k'],['con …á','c'],['con …ò','c'],['con …ua','c'],['cái …ổng','c'],['ăn …ơm','c'],['cái …ân','c'],['bãi …ỏ','c'],['…ửa sổ','c']]},
+ {o:['g','gh'],rule:'Trước i, e, ê ta viết gh. Trước các âm khác ta viết g.',w:[['cái …ế','gh'],['…i bài','gh'],['…é thăm','gh'],['con …à','g'],['bàn …ỗ','g'],['nhà …a','g'],['…ọn gàng','g'],['…ần gũi','g']]},
+ {o:['ng','ngh'],rule:'Trước i, e, ê ta viết ngh. Trước các âm khác ta viết ng.',w:[['lắng …e','ngh'],['…ỉ ngơi','ngh'],['suy …ĩ','ngh'],['con …é','ngh'],['bắp …ô','ng'],['đi …ủ','ng'],['con …ựa','ng'],['…ôi nhà','ng'],['…ọt ngào','ng']]},
+ {o:['s','x'],rule:'Con đọc thử cả hai cách rồi chọn cách có nghĩa.',w:[['dòng …ông','s'],['ngôi …ao','s'],['quyển …ách','s'],['buổi …áng','s'],['hoa …en','s'],['…e đạp','x'],['màu …anh','x'],['…inh đẹp','x'],['mùa …uân','x']]},
+ {o:['l','n'],rule:'Con đọc thử cả hai cách rồi chọn cách có nghĩa.',w:[['…ắng nghe','l'],['quả …ê','l'],['…á cây','l'],['…àm bài','l'],['…ước uống','n'],['…ón lá','n'],['…ắng vàng','n'],['quả …a','n'],['…ấu cơm','n']]},
+ {o:['ch','tr'],rule:'Con đọc thử cả hai cách rồi chọn cách có nghĩa.',w:[['cây …e','tr'],['con …âu','tr'],['mặt …ăng','tr'],['ngôi …ường','tr'],['…ời xanh','tr'],['con …im','ch'],['…ăm chỉ','ch'],['quả …anh','ch'],['cái …ổi','ch'],['buổi …iều','ch']]},
+ {o:['r','d','gi'],rule:'Con đọc thử từng cách rồi chọn cách có nghĩa.',w:[['…ửa tay','r'],['con …ùa','r'],['hàng …ào','r'],['…a đình','gi'],['cô …áo','gi'],['…òng sông','d'],['con …ê','d'],['…ọn dẹp','d']]}
+];
+function genChinhTa(){const g=pick(CT),[p,a]=pick(g.w);
+  return mcq(`Điền ${g.o.join(' hay ')}: "${p}"`,g.o,a,g.rule,`Viết đúng là "${p.replace('…',a)}".`,{fixed:true})}
+function genSaiChinhTa(){const gs=pickN(CT.slice(0,4),3),it=gs.map(g=>[g,pick(g.w)]);
+  const [g,[p,a]]=it[0],wrong=p.replace('…',g.o.find(x=>x!==a));
+  return mcq('Từ nào viết sai chính tả?',[wrong,it[1][1][0].replace('…',it[1][1][1]),it[2][1][0].replace('…',it[2][1][1])],wrong,'Con đọc kĩ từng từ. '+g.rule,`"${wrong}" viết sai. Viết đúng là "${p.replace('…',a)}".`)}
+const TEN=['Hà Nội','Đà Nẵng','Việt Nam','Hồ Gươm','Nguyễn Văn An','Trần Thị Mai','Sông Hồng','Lê Minh Anh'];
+function genVietHoa(){const t=pick(TEN),w=t.split(' ');
+  return mcq('Tên riêng nào viết đúng?',[t,t.toLowerCase(),w[0]+' '+w.slice(1).join(' ').toLowerCase()],t,'Tên riêng viết hoa chữ cái đầu của mỗi tiếng.',`Viết đúng là "${t}".`)}
+const LOAI={sv:{n:'sự vật',h:'Sự vật là người, đồ vật, con vật, cây cối.',w:['cô giáo','bác sĩ','học sinh','con mèo','con trâu','cái bàn','quyển sách','cây bàng','bông hoa','dòng sông','ngôi nhà','bút chì','con gà','em bé','xe đạp','cái chổi']},
+ hd:{n:'hoạt động',h:'Hoạt động là việc mình làm.',w:['chạy','nhảy','đọc sách','viết bài','quét nhà','tưới cây','nấu cơm','hát','vẽ tranh','bơi','rửa bát','trồng cây','đá bóng','nhổ cỏ']},
+ dd:{n:'đặc điểm',h:'Đặc điểm cho biết sự vật như thế nào.',w:['cao','thấp','xanh','đỏ','thơm','ngoan','chăm chỉ','sạch sẽ','to','nhỏ','nhanh','hiền','vui vẻ','mát','dài','tròn']}};
+const LK=['sv','hd','dd'];
+function genTuLoai(){const k=pick(LK),a=pick(LOAI[k].w);
+  return mcq(`Từ nào chỉ ${LOAI[k].n}?`,[a].concat(LK.filter(x=>x!==k).map(x=>pick(LOAI[x].w))),a,LOAI[k].h,`"${a}" là từ chỉ ${LOAI[k].n}.`)}
+function genXepLoai(){const k=pick(LK),a=pick(LOAI[k].w);
+  return mcq(`"${a}" là từ chỉ gì?`,['sự vật','hoạt động','đặc điểm'],LOAI[k].n,LOAI[k].h,`"${a}" là từ chỉ ${LOAI[k].n}.`,{fixed:true})}
+function genKhacLoai(){const k=pick(LK),o=pick(LK.filter(x=>x!==k)),odd=pick(LOAI[o].w);
+  return mcq('Từ nào khác loại với các từ còn lại?',[odd].concat(pickN(LOAI[k].w,3)),odd,'Con xem mỗi từ chỉ sự vật, hoạt động hay đặc điểm.',`"${odd}" là từ chỉ ${LOAI[o].n}. Các từ còn lại chỉ ${LOAI[k].n}.`)}
+const TRAI=[['cao','thấp'],['to','nhỏ'],['dài','ngắn'],['nóng','lạnh'],['nhanh','chậm'],['sáng','tối'],['khoẻ','yếu'],['vui','buồn'],['mới','cũ'],['sạch','bẩn'],['già','trẻ'],['rộng','hẹp']];
+function genTraiNghia(){const ps=pickN(TRAI,3),flip=Math.random()<.5,a=ps[0][flip?1:0],b=ps[0][flip?0:1];
+  return mcq(`Từ nào trái nghĩa với "${a}"?`,[b,ps[1][rnd(0,1)],ps[2][rnd(0,1)]],b,'Trái nghĩa là có nghĩa ngược lại.',`"${a}" trái nghĩa với "${b}".`)}
+const DIEN=[['Con mèo … chuột.','bắt','hót','bơi'],['Chim … líu lo trên cành.','hót','sủa','gáy'],['Em … truyện cho bà nghe.','đọc','ăn','ngủ'],['Mặt trời … ở đằng đông.','mọc','lặn','rơi'],['Con chó … gâu gâu.','sủa','gáy','hót'],['Gà trống … ò ó o.','gáy','sủa','bơi'],['Mẹ … cơm trong bếp.','nấu','trồng','lái'],['Đàn cá … dưới ao.','bơi','bay','chạy'],['Bố … xe đưa em đi học.','lái','nấu','hái']];
+function genDienTu(){const d=pick(DIEN);
+  return mcq(`Chọn từ điền vào chỗ trống: "${d[0]}"`,d.slice(1),d[1],'Con đọc cả câu với từng từ, xem từ nào hợp nghĩa.',`Câu đúng là: "${d[0].replace('…',d[1])}"`)}
+const CAU={gt:{n:'câu giới thiệu',h:'Câu giới thiệu thường có từ "là".',w:['Em là học sinh lớp 2.','Mẹ em là bác sĩ.','Bố Lan là kĩ sư.','Đây là quyển sách của em.','Bạn Nam là lớp trưởng.','Hà Nội là thủ đô của nước ta.']},
+ hd:{n:'câu nêu hoạt động',h:'Câu nêu hoạt động cho biết ai làm gì.',w:['Bố tưới cây.','Mẹ nấu cơm.','Em quét nhà.','Bà kể chuyện.','Các bạn đá bóng.','Cô giáo giảng bài.']},
+ dd:{n:'câu nêu đặc điểm',h:'Câu nêu đặc điểm cho biết sự vật như thế nào.',w:['Bông hoa rất thơm.','Bầu trời xanh ngắt.','Em bé rất ngoan.','Con đường dài và rộng.','Chú mèo rất hiền.','Mái tóc bà bạc trắng.']}};
+const CK3=['gt','hd','dd'];
+function genLoaiCau(){const k=pick(CK3),a=pick(CAU[k].w);
+  return mcq(`Câu nào là ${CAU[k].n}?`,[a].concat(CK3.filter(x=>x!==k).map(x=>pick(CAU[x].w))),a,CAU[k].h,`"${a}" là ${CAU[k].n}.`)}
+function genCauLaGi(){const k=pick(CK3),a=pick(CAU[k].w);
+  return mcq(`"${a}" là câu gì?`,CK3.map(x=>CAU[x].n),CAU[k].n,CAU[k].h,`"${a}" là ${CAU[k].n}.`,{fixed:true})}
+const HOI=['Hôm nay con học môn gì','Bạn tên là gì','Nhà bạn ở đâu','Mấy giờ con đi học','Ai đưa em đến trường','Con thích quả gì nhất'];
+function genDauCau(){const ask=Math.random()<.5,s=ask?pick(HOI):pick(CAU.hd.w.concat(CAU.dd.w)).slice(0,-1);
+  return mcq(`Chọn dấu câu: "${s}…"`,['.','?'],ask?'?':'.',ask?'Đây là câu dùng để hỏi.':'Đây là câu kể.',ask?'Câu hỏi kết thúc bằng dấu chấm hỏi.':'Câu kể kết thúc bằng dấu chấm.',{fixed:true})}
+const XEP=[['Mẹ','đang','nấu','cơm'],['Em','thích','đọc','sách'],['Bà','kể','chuyện','cổ tích'],['Con mèo','nằm','trên','ghế'],['Chúng em','trồng','cây','ở','sân trường'],['Bố','đưa','em','đến','trường'],['Bông hoa','hồng','rất','thơm'],['Buổi sáng','em','tập','thể dục'],['Cô giáo','khen','em','viết','đẹp'],['Đàn chim','bay','về','tổ']];
+function genXepCau(){const t=pick(XEP);
+  return {type:'order',q:'Con xếp các từ thành câu đúng',say:'Con xếp các từ thành câu đúng.',tokens:t,ans:t.join(' '),hint:`Câu bắt đầu bằng từ viết hoa: "${t[0]}".`,explain:`Câu đúng là: "${t.join(' ')}."`}}
+TV.doc[0].iq=[mc('Vì sao cả nhà khen rau ngọt?',['Vì rau tươi, vừa hái ở vườn','Vì rau mua ở chợ','Vì mẹ cho nhiều đường'],'Rau trong bữa trưa lấy từ đâu?','Na vừa hái rau ở vườn mang vào bếp, nên rau rất tươi.'),
+  mc('Na là bạn nhỏ như thế nào?',['Chăm chỉ, biết giúp bà và mẹ','Lười biếng','Hay khóc nhè'],'Con nhớ lại những việc Na đã làm.','Na tưới rau giúp bà và hái rau cho mẹ, nên Na chăm chỉ.')];
+TV.doc[1].iq=[mc('Vì sao mỗi chiều Mướp ra cổng?',['Vì Mướp quý Bin, muốn đón Bin','Vì Mướp muốn bắt chuột','Vì Mướp thích ra đường'],'Mướp ra cổng để đợi ai?','Mướp ra cổng đợi Bin đi học về, vì Mướp quý Bin.'),
+  mc('Bin và Mướp như thế nào với nhau?',['Rất thân thiết','Không ưa nhau','Mới quen nhau'],'Bin bế Mướp và kể chuyện cho Mướp nghe.','Bin bế Mướp, kể chuyện cho Mướp nghe, nên hai bạn rất thân thiết.')];
+const ALLDOC=TV.doc.concat([
+ {p:'Giờ ra chơi, Minh thấy bạn Hoa ngồi một mình ở ghế đá. Hoa mới chuyển đến nên chưa quen ai. Minh chạy lại rủ Hoa chơi nhảy dây cùng các bạn. Hoa cười thật tươi. Từ hôm đó, hai bạn thường đi học cùng nhau.',
+  qs:[mc('Hoa ngồi ở đâu?',['Ở ghế đá','Trong lớp','Ở cổng trường'],'Con đọc lại câu đầu tiên.','Bài viết: "Hoa ngồi một mình ở ghế đá."'),
+      mc('Vì sao Hoa chưa quen ai?',['Vì Hoa mới chuyển đến','Vì Hoa bị ốm','Vì Hoa đi học muộn'],'Con đọc lại câu thứ hai.','Bài viết: "Hoa mới chuyển đến nên chưa quen ai."'),
+      mc('Minh rủ Hoa chơi gì?',['Nhảy dây','Đá cầu','Trốn tìm'],'Con đọc lại câu thứ ba.','Bài viết: "rủ Hoa chơi nhảy dây."'),
+      mc('Từ hôm đó, hai bạn thường làm gì?',['Đi học cùng nhau','Ngồi cùng bàn','Đọc sách cùng nhau'],'Con đọc lại câu cuối.','Bài viết: "hai bạn thường đi học cùng nhau."')],
+  iq:[mc('Minh là người bạn như thế nào?',['Thân thiện, biết quan tâm đến bạn','Hay trêu bạn','Nhút nhát'],'Thấy bạn ngồi một mình, Minh đã làm gì?','Minh thấy bạn ngồi một mình thì chạy lại rủ chơi, nên Minh thân thiện và biết quan tâm.'),
+      mc('Vì sao Hoa cười thật tươi?',['Vì Hoa vui khi được bạn rủ chơi','Vì Hoa thắng trò chơi','Vì Hoa được điểm tốt'],'Trước đó Hoa đang ngồi một mình.','Hoa đang ngồi một mình thì được Minh rủ chơi, nên Hoa rất vui.')]},
+ {p:'Trời sắp mưa. Mây đen kéo đến, gió thổi mạnh. Mẹ gọi Bi ra sân cất quần áo. Bi nhanh tay ôm hết quần áo vào nhà. Vừa xong thì mưa rơi lộp độp trên mái. Mẹ xoa đầu khen Bi giỏi.',
+  qs:[mc('Dấu hiệu nào cho thấy trời sắp mưa?',['Mây đen kéo đến','Nắng chói chang','Trăng lên cao'],'Con đọc lại câu thứ hai.','Bài viết: "Mây đen kéo đến, gió thổi mạnh."'),
+      mc('Mẹ gọi Bi làm gì?',['Cất quần áo','Tưới cây','Quét sân'],'Con đọc lại câu thứ ba.','Bài viết: "Mẹ gọi Bi ra sân cất quần áo."'),
+      mc('Bi đã làm thế nào?',['Nhanh tay ôm quần áo vào nhà','Đứng nhìn trời mưa','Chạy đi chơi'],'Con đọc lại câu thứ tư.','Bài viết: "Bi nhanh tay ôm hết quần áo vào nhà."'),
+      mc('Mẹ đã khen Bi thế nào?',['Khen Bi giỏi','Khen Bi cao','Khen Bi hát hay'],'Con đọc lại câu cuối.','Bài viết: "Mẹ xoa đầu khen Bi giỏi."')],
+  iq:[mc('Nếu Bi làm chậm thì chuyện gì có thể xảy ra?',['Quần áo bị ướt','Quần áo khô hơn','Trời sẽ hết mưa'],'Bi vừa cất xong thì trời làm sao?','Vừa cất xong thì mưa rơi. Nếu chậm, quần áo sẽ bị ướt.'),
+      mc('Bi là bạn nhỏ như thế nào?',['Nhanh nhẹn, biết giúp mẹ','Lười biếng','Sợ mưa'],'Khi mẹ gọi, Bi đã làm gì?','Mẹ gọi là Bi làm ngay và làm nhanh, nên Bi nhanh nhẹn, biết giúp mẹ.')]},
+ {p:'Ông trồng một cây xoài ở góc vườn. Mùa hè, cây cho rất nhiều quả. Ông hái những quả chín vàng, chia cho hàng xóm mỗi nhà một ít. Bé Na hỏi sao ông không để dành ăn dần. Ông cười: "Quả ngọt thì phải chia cho mọi người cùng vui."',
+  qs:[mc('Ông trồng cây gì?',['Cây xoài','Cây cam','Cây ổi'],'Con đọc lại câu đầu tiên.','Bài viết: "Ông trồng một cây xoài."'),
+      mc('Cây cho nhiều quả vào mùa nào?',['Mùa hè','Mùa đông','Mùa thu'],'Con đọc lại câu thứ hai.','Bài viết: "Mùa hè, cây cho rất nhiều quả."'),
+      mc('Ông chia quả cho ai?',['Cho hàng xóm','Cho người đi chợ','Cho các bạn của Na'],'Con đọc lại câu thứ ba.','Bài viết: "chia cho hàng xóm mỗi nhà một ít."'),
+      mc('Những quả ông hái có màu gì?',['Màu vàng','Màu xanh','Màu đỏ'],'Con tìm chữ nói về quả chín.','Bài viết: "những quả chín vàng."')],
+  iq:[mc('Ông là người như thế nào?',['Tốt bụng, thích chia sẻ','Chỉ nghĩ cho mình','Khó tính'],'Ông đã làm gì với những quả xoài?','Ông đem quả chia cho hàng xóm, nên ông tốt bụng và thích chia sẻ.'),
+      mc('Theo ông, vì sao nên chia quả cho mọi người?',['Để mọi người cùng vui','Vì quả sắp hỏng','Vì nhà không có chỗ để'],'Con đọc lại lời ông nói.','Ông nói: "Quả ngọt thì phải chia cho mọi người cùng vui."')]}
+]);
+const DOCTO1=TV.docto.concat(['Ông em trồng cây xoài.','Em giúp mẹ quét nhà.','Con mèo nằm sưởi nắng.','Bố đưa em đến trường.','Cô giáo khen em viết đẹp.','Đàn chim bay về tổ.']);
+const DOCTO2=['Mỗi buổi sáng, em dậy sớm tập thể dục cùng bố.','Trời mưa to, em mặc áo mưa và đi ủng đến trường.','Khi có bạn bị ngã, em chạy lại đỡ bạn dậy.','Mùa xuân, cây cối trong vườn đâm chồi nảy lộc.','Em thích nhất là được nghe bà kể chuyện cổ tích.'];
+const sayQ=s=>({type:'say',q:'Con đọc to câu này',target:s,showTarget:true});
+
+/* ===== Tiếng Anh: mẫu câu theo từng unit (câu do Claude soạn theo từ vựng của unit) ===== */
+const ENS=[
+ {note:'Câu này dùng để khen món ăn ngon. "Yummy" nghĩa là ngon.',s:[['The pasta is yummy.','Mì Ý rất ngon.'],['The popcorn is yummy.','Bỏng ngô rất ngon.'],['The pizza is yummy.','Bánh pi-da rất ngon.']]},
+ {note:'Câu này dùng để nói mình có cái gì. "I have" nghĩa là tớ có.',s:[['I have a kite.','Tớ có một cái diều.'],['I have a bike.','Tớ có một chiếc xe đạp.'],['I have a kitten.','Tớ có một chú mèo con.']]},
+ {note:'Câu này dùng để rủ bạn cùng nhìn một thứ gì đó.',s:[["Let's look at the sail.",'Chúng mình cùng nhìn cánh buồm nào.'],["Let's look at the sea.",'Chúng mình cùng nhìn biển nào.'],["Let's look at the sand.",'Chúng mình cùng nhìn bãi cát nào.']]},
+ {note:'"I can see" nghĩa là tớ nhìn thấy.',s:[['I can see a rainbow.','Tớ nhìn thấy một cái cầu vồng.'],['I can see a river.','Tớ nhìn thấy một dòng sông.'],['I can see a road.','Tớ nhìn thấy một con đường.']]},
+ {note:'"This is" nghĩa là đây là. Câu này dùng để giới thiệu một vật.',s:[['This is a question.','Đây là một câu hỏi.'],['This is a square.','Đây là một hình vuông.'],['This is a quiz.','Đây là một câu đố.']]},
+ {note:'"There is" nghĩa là có. Trước "ox" mình dùng "an" vì "ox" bắt đầu bằng âm o.',s:[['There is a fox.','Có một con cáo.'],['There is a box.','Có một cái hộp.'],['There is an ox.','Có một con bò đực.']]},
+ {note:'Câu này dùng để nhờ bạn đưa cho mình một thứ. "Please" là lời nói lịch sự.',s:[['Pass me the jelly, please.','Làm ơn đưa cho tớ món thạch.'],['Pass me the juice, please.','Làm ơn đưa cho tớ nước ép.'],['Pass me the jam, please.','Làm ơn đưa cho tớ lọ mứt.']]},
+ {note:'"I like" nghĩa là tớ thích.',s:[['I like the van.','Tớ thích chiếc xe van.'],['I like the village.','Tớ thích ngôi làng.'],['I like volleyball.','Tớ thích bóng chuyền.']]}
+];
+const enW=i=>EN[i][1], enAll=()=>[].concat(...ENS.map((u,i)=>u.s.map((x,k)=>({i,k,s:x[0],vi:x[1]}))));
+const enListen=i=>()=>{const ws=enW(i),x=pick(ws);return {type:'pick',mode:'listen',q:'Nghe và chọn hình đúng',say:x[0],en:true,opts:ws.map(y=>({v:y[0],big:y[2],label:y[1]})),ans:x[0],hint:'Con bấm "Nghe lại" rồi chọn.',explain:`"${x[0]}" nghĩa là ${x[1]}.`}};
+const enLook=i=>()=>{const ws=enW(i),x=pick(ws);return {type:'pick',mode:'look',q:'Hình này tiếng Anh là gì?',pic:x[2],cap:x[1],opts:ws.map(y=>({v:y[0],label:y[0]})),ans:x[0],hint:`Hình này là ${x[1]}.`,explain:`${x[1]} tiếng Anh là "${x[0]}".`}};
+const enSayW=i=>()=>{const x=pick(enW(i));return {type:'say',q:'Con nói to từ này',pic:x[2],target:x[0],en:true,cap:x[1]}};
+const enBlank=(i,hard)=>()=>{const j=hard?rnd(0,i):i,k=rnd(0,2),w=enW(j)[k],[s,vi]=ENS[j].s[k];
+  const others=hard?pickN([].concat(...EN.map(u=>u[1])).filter(y=>!enW(j).includes(y)),2):enW(j).filter(y=>y!==w);
+  return {type:'pick',mode:'look',q:s.replace(w[0],'___'),say:'Con chọn từ đúng để điền vào chỗ trống.',pic:w[2],cap:vi,opts:[w].concat(others).map(y=>({v:y[0],label:y[0]})),ans:w[0],hint:`Câu này nghĩa là: ${vi}`,explain:`Câu đúng là: "${s}"`}};
+const enOrder=(i,hard)=>()=>{const j=hard?rnd(0,i):i,[s,vi]=pick(ENS[j].s),t=s.split(' ');
+  return {type:'order',q:`Nghe và xếp thành câu: "${vi}"`,say:s,en:true,tokens:t,ans:s,hint:`Câu bắt đầu bằng "${t[0]}".`,explain:`Câu đúng là: "${s}"`}};
+const enMeaning=i=>()=>{const u=ENS[i].s,x=pick(u);return mcq(`"${x[0]}" nghĩa là gì?`,u.map(y=>y[1]),x[1],'Con bấm "Nghe đề" để nghe lại câu.',`"${x[0]}" nghĩa là: ${x[1]}`,{en:true,say:x[0],quiet:true})};
+const enListenS=i=>()=>{const ws=enW(i),k=rnd(0,2),[s,vi]=ENS[i].s[k];return {type:'pick',mode:'listen',q:'Nghe cả câu và chọn hình đúng',say:s,en:true,opts:ws.map(y=>({v:y[0],big:y[2],label:y[1]})),ans:ws[k][0],hint:'Con bấm "Nghe lại" và chú ý từ khác nhau trong câu.',explain:`Câu vừa nghe là: "${s}" Nghĩa là: ${vi}`}};
+const enSayS=(i,hard)=>()=>{const j=hard?rnd(0,i):i,k=rnd(0,2),[s,vi]=ENS[j].s[k];return {type:'say',q:'Con nói to cả câu này',pic:enW(j)[k][2],target:s,en:true,cap:vi}};
+const enReverse=i=>()=>{const all=enAll(),mine=all.filter(x=>x.i<=i),x=pick(mine),others=pickN(all.filter(y=>y.s!==x.s&&!(y.i===x.i)),2);
+  return mcq(`Câu nào nghĩa là: "${x.vi}"`,[x.s,others[0].s,others[1].s],x.s,'Con tìm từ quan trọng nhất trong câu.',`"${x.s}" nghĩa là: ${x.vi}`,{quiet:true})};
+function enLesson(t){const i=Number(t.id.slice(1))-1,u=ENS[i],[a,b,c]=u.s;
+  return lessonVocab(t).concat([
+   {t:'Mẫu câu',a:`${u.note} Ví dụ: "${a[0]}" nghĩa là: ${a[1]}`,b:`Mình nghe chậm nhé. "${a[0]}" nghĩa là: ${a[1]}`,v:B(a[0],a[1]),
+    seqA:[{t:u.note+' Ví dụ:'},{t:a[0],en:true},{t:'Nghĩa là: '+a[1]},{t:a[0],en:true}],seqB:[{t:'Mình nghe chậm nhé.'},{t:a[0],en:true,slow:true},{t:'Nghĩa là: '+a[1]},{t:a[0],en:true,slow:true}]},
+   {t:'Thay một từ để có câu mới',a:`Con thay một từ là có câu mới: "${b[0]}" và "${c[0]}"`,b:`"${b[0]}" nghĩa là: ${b[1]} "${c[0]}" nghĩa là: ${c[1]}`,v:W([a[0],b[0],c[0]]),
+    seqA:[{t:'Con thay một từ là có câu mới.'},{t:b[0],en:true},{t:c[0],en:true}],seqB:[{t:b[0],en:true,slow:true},{t:'Nghĩa là: '+b[1]},{t:c[0],en:true,slow:true},{t:'Nghĩa là: '+c[1]}]}])}
+
 /* ===== Bài giảng: mỗi bước có cách giảng chính (a) và cách giảng lại khác (b) ===== */
 const F=(a,b,stage)=>({k:'frame',a,b,stage}), FS=(m,s,stage)=>({k:'sub',m,s,stage});
 const C=(l1,l2,res,carry)=>({k:'col',l1,l2,res,carry}), W=(items)=>({k:'chips',items}), B=(text,cap)=>({k:'big',text,cap});
@@ -315,8 +468,9 @@ const LESSONS={
      {t:'Ngắt nghỉ đúng chỗ',a:'Gặp dấu phẩy, con ngắt hơi một chút. Gặp dấu chấm, con nghỉ lâu hơn.',b:'Dấu phẩy là nghỉ ngắn, đếm thầm một. Dấu chấm là nghỉ dài, đếm thầm một, hai.',v:W(['dấu phẩy: nghỉ ngắn','dấu chấm: nghỉ dài'])},
      {t:'Đọc vừa đủ nghe',a:'Con đọc to vừa phải, đủ để người ngồi cạnh nghe rõ. Không hét, cũng không lí nhí.',b:'Con tưởng tượng đang đọc cho bà nghe. Giọng rõ ràng, vui vẻ là được.',v:B('🙂','giọng rõ ràng')}]
 };
-function lessonFor(t){
-  if(t.words)return t.words.map(([w,vi,pic])=>({t:w,a:`"${w}" nghĩa là ${vi}. Con nghe rồi nói theo nhé.`,b:`Mình nghe chậm hơn nhé. "${w}" là ${vi}.`,v:B(pic,w),
+function lessonFor(t){if(t.words)return enLesson(t);return LESSONS[t.id]||[]}
+function lessonVocab(t){
+  return t.words.map(([w,vi,pic])=>({t:w,a:`"${w}" nghĩa là ${vi}. Con nghe rồi nói theo nhé.`,b:`Mình nghe chậm hơn nhé. "${w}" là ${vi}.`,v:B(pic,w),
     seqA:[{t:`Từ này nghĩa là ${vi}.`},{t:w,en:true},{t:w,en:true}],seqB:[{t:`Mình nghe chậm hơn nhé.`},{t:w,en:true,slow:true},{t:w,en:true,slow:true},{t:`Nghĩa là ${vi}.`}]}));
   return LESSONS[t.id]||[]}
 
@@ -344,6 +498,35 @@ const SUBJECTS=[
 const findTopic=id=>{for(const s of SUBJECTS)for(const t of s.topics)if(t.id===id)return {s,t};return null};
 const reviewQs=t=>{const all=t.make();const easy=all.filter(q=>q.type!=='say');return (easy.length>=3?easy:all).slice(0,3).map(q=>Object.assign({},q))};
 
+/* ===== Ghép vòng câu hỏi: ôn (dễ), luyện tập (dễ + đổi dạng), thử thách (nâng cao); tránh lặp câu vừa làm ===== */
+const RECENT={};
+const qKey=q=>[q.passage?q.passage.slice(0,20):'',q.q,q.target,q.say,q.pic,q.ans].join('|');
+function build(id,gens,n){const rec=RECENT[id]||(RECENT[id]=[]),out=[],seen=new Set(),gs=shuffle(gens);let g=0;
+  while(out.length<n&&g<400){const q=gs[g%gs.length]();g++;const k=qKey(q);
+    if(seen.has(k))continue;if(g<=250&&rec.includes(k))continue;seen.add(k);out.push(q)}
+  seen.forEach(k=>rec.push(k));if(rec.length>60)rec.splice(0,rec.length-60);return out}
+const M20=[()=>genThieu(20),()=>genSoSanh(20),()=>genDungSai(20)],M100=[()=>genThieu(100),()=>genSoSanh(100),()=>genDungSai(100)];
+const H20=[()=>genDay(20),()=>genHaiBuoc(20),()=>genTimSo(20),()=>genSoSanh(20),()=>genThieu(20)],H100=[()=>genDay(100),()=>genHaiBuoc(100),()=>genTimSo(100),genDoSo,()=>genSoSanh(100)];
+const CFG={t1:[[genCong20],M20,H20],t2:[[genTru20],M20,H20],
+ t3:[[genLoiVan],[genLoiVan,()=>genHaiBuoc(20)],[genNguoc,()=>genHaiBuoc(20),()=>genTimSo(20)]],
+ t4:[[genKgL],[genKgL,genKgHard],[genKgHard,()=>genHaiBuoc(20),genNguoc]],
+ t5:[[genCong100a],M100,H100],t6:[[genCong100b],M100,H100],t7:[[genTru100a],M100,H100],t8:[[genTru100b],M100,H100],
+ v1:[[genChinhTa],[genChinhTa,genVietHoa],[genSaiChinhTa,genVietHoa,genSaiChinhTa]],
+ v2:[[genTuLoai],[genXepLoai,genTuLoai],[genKhacLoai,genTraiNghia,genDienTu]],
+ v3:[[genLoaiCau,genDauCau],[genCauLaGi,genDauCau],[genXepCau,genDienTu,genCauLaGi]]};
+for(const s of SUBJECTS)for(const t of s.topics){const c=CFG[t.id];if(c){t.easy=c[0];t.mix=c[1];t.hard=c[2]}
+  if(t.words){const i=Number(t.id.slice(1))-1;t.easy=[enListen(i),enLook(i),enSayW(i)];t.mix=[enBlank(i),enOrder(i),enMeaning(i),enListenS(i),enSayS(i)];t.hard=[enOrder(i,true),enBlank(i,true),enReverse(i),enSayS(i,true)]}}
+findTopic('v4').t.custom=mode=>{const rec=RECENT.v4||(RECENT.v4=[]),idx=ALLDOC.map((_,i)=>i),i=pick(idx.filter(x=>!rec.slice(-3).includes(x)));
+  rec.push(i);if(rec.length>10)rec.shift();const d=ALLDOC[i],w=(doc,qs)=>qs.map(q=>Object.assign({passage:doc.p},q));
+  if(mode==='review')return w(d,pickN(d.qs,3));
+  if(mode==='hard'){const j=pick(idx.filter(x=>x!==i));return w(d,d.iq).concat(w(ALLDOC[j],ALLDOC[j].iq))}
+  return w(d,d.qs.concat(pickN(d.iq,1)))};
+findTopic('v5').t.custom=mode=>mode==='hard'?build('v5h',[()=>sayQ(pick(DOCTO2))],4):build('v5',[()=>sayQ(pick(DOCTO1))],mode==='review'?3:6);
+function roundFor(t,mode){if(t.custom)return t.custom(mode);
+  if(mode==='review')return build(t.id+'r',t.easy,3);
+  if(mode==='hard')return build(t.id+'h',t.hard,6);
+  const seen=new Set();return build(t.id+'p',t.easy,4).concat(build(t.id+'p',t.mix,4)).filter(q=>{const k=qKey(q);if(seen.has(k))return false;seen.add(k);return true})}
+
 /* ===== Nghe số tiếng Việt thành con số ===== */
 function parseNumber(text){const t=norm(text);const d=t.match(/\d+/);if(d)return parseInt(d[0],10);
   const U={'không':0,'một':1,'mốt':1,'hai':2,'ba':3,'bốn':4,'tư':4,'năm':5,'lăm':5,'nhăm':5,'sáu':6,'bảy':7,'bẩy':7,'tám':8,'chín':9};
@@ -364,9 +547,10 @@ function voiceScore(name,lang,want){let s=0;const n=String(name).toLowerCase(),l
 
 if(typeof document!=='undefined'){(function(){
 /* ===== Lưu tiến độ trên thiết bị ===== */
-const KEY='vohoclop2',DEF={session:20,cap:90,rate:0.9,auto:true,accent:'en-GB',voiceVi:'',voiceEn:''};
+const KEY='vohoclop2',DEF={session:20,cap:90,rate:0.9,auto:true,mic:true,accent:'en-GB',voiceVi:'',voiceEn:''};
 let S={log:{},days:{},st:{},unclear:{},set:Object.assign({},DEF)};
-try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r){S.log=r.log||{};S.days=r.days||{};S.st=r.st||{};S.unclear=r.unclear||{};S.set=Object.assign({},DEF,r.set||{})}}catch(e){}
+try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r){S.log=r.log||{};S.days=r.days||{};S.st=r.st||{};S.unclear=r.unclear||{};Object.assign(RECENT,r.recent||{});S.set=Object.assign({},DEF,r.set||{})}}catch(e){}
+S.recent=RECENT;
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const day=()=>S.days[today()]||(S.days[today()]={sec:0,stars:0,extra:0});
@@ -386,10 +570,10 @@ function pickVoice(kind){const list=voicesFor(kind);if(!list.length)return null;
 function say(items){try{if(!('speechSynthesis' in window))return;speechSynthesis.cancel();const all=allVoices();
   items.forEach(it=>{const kind=it.en?'en':'vi',v=pickVoice(kind);
     if(all.length&&!v){if(kind==='vi')voiceNote='Thiết bị này chưa có giọng đọc tiếng Việt.';return}
-    const u=new SpeechSynthesisUtterance(it.t);u.lang=v?v.lang:(it.en?S.set.accent:'vi-VN');if(v)u.voice=v;u.rate=S.set.rate*(it.slow?0.7:1);speechSynthesis.speak(u)})}catch(e){}}
+    const u=new SpeechSynthesisUtterance(it.t);u.lang=v?v.lang:(it.en?S.set.accent:'vi-VN');if(v)u.voice=v;u.rate=S.set.rate*(it.slow?0.7:1);u.volume=1;speechSynthesis.speak(u)})}catch(e){}}
 const hush=()=>{try{speechSynthesis.cancel()}catch(e){}};
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let micOK=!!SR,listening=false;
+let micOK=!!SR,listening=false;const micOn=()=>micOK&&S.set.mic;
 function listen(en,onText){if(!micOK||listening)return;let rec;
   try{hush();rec=new SR();rec.lang=en?S.set.accent:'vi-VN';rec.interimResults=false;rec.maxAlternatives=3;
     rec.onresult=e=>{const alts=[];for(const a of e.results[0])alts.push(a.transcript);onText(alts)};
@@ -411,31 +595,34 @@ function speakStep(){if(!T)return;
   else if(T.mode==='ask'){say([{t:'Con đã hiểu bài chưa?'}])}
   else if(T.mode==='which'){say([{t:'Chỗ nào con chưa hiểu? Con bấm vào chỗ đó nhé.'}])}}
 /* Câu hỏi */
-function startRound(mode){const f=findTopic(topic);const qs=mode==='review'?reviewQs(f.t):f.t.make();
+function startRound(mode){const f=findTopic(topic);const qs=roundFor(f.t,mode);
   L={id:f.t.id,name:f.t.name,mode,qs,i:0,first:0};prep();view='lesson';render();autoRead();window.scrollTo(0,0)}
 function prep(){const q=L.qs[L.i];L.tries=0;L.phase='ask';L.input='';L.sel=null;L.msg=null;
-  if(q.type==='mc')q._o=shuffle(q.opts).map(o=>({v:o,label:o}));
+  if(q.type==='mc')q._o=(q.fixed?q.opts:shuffle(q.opts)).map(o=>({v:o,label:o}));
+  if(q.type==='order'){let o,g=0;do{o=shuffle(q.tokens.map((_,i)=>i))}while(o.every((x,i)=>x===i)&&g++<9);q._o=o;L.picked=[]}
   if(q.type==='pick')q._o=shuffle(q.opts)}
 function autoRead(){if(S.set.auto&&L)readQ()}
 function readQ(){const q=L.qs[L.i];
   if(q.type==='say'){say([{t:q.target,en:q.en}]);return}
   if(q.en&&q.say){say([{t:q.say,en:true}]);return}
   let t=(q.passage?q.passage+' ':'')+(q.say||q.q);
-  if(q.type==='mc')t+=' '+q._o.map(o=>o.label).join(', ');
+  if(q.type==='mc'&&!q.fixed&&!q.quiet)t+=' '+q._o.map(o=>o.label).join(', ');
   say([{t}])}
 function judge(ok){const q=L.qs[L.i];
   if(ok){L.phase='done';if(L.tries===0){L.first++;day().stars++}logQ(L.id,L.tries===0);
     L.msg={k:'ok',t:pick(['Đúng rồi!','Chính xác!','Con làm tốt lắm!','Giỏi quá!']),d:q.explain||''};say([{t:L.msg.t}])}
   else{L.tries++;
-    if(L.tries===1){L.phase='ask';L.input='';L.sel=null;L.msg={k:'no',t:'Chưa đúng. Con xem gợi ý rồi thử lại nhé.',d:q.hint||''};say([{t:'Chưa đúng. '+(q.hint||'')}])}
-    else{L.phase='done';logQ(L.id,false);const ex=(q.explain||'')+(q.type==='num'?'':' Đáp án là '+q.ans+'.');L.msg={k:'no',t:'Mình cùng xem lời giải nhé.',d:ex};say([{t:'Mình cùng xem lời giải nhé. '+ex}])}}
+    if(L.tries===1){L.phase='ask';L.input='';L.sel=null;L.picked=[];L.msg={k:'no',t:'Chưa đúng. Con xem gợi ý rồi thử lại nhé.',d:q.hint||''};say([{t:'Chưa đúng. '+(q.hint||'')}])}
+    else{L.phase='done';logQ(L.id,false);const ex=(q.explain||'')+(q.type==='num'||q.type==='order'||q.quiet?'':' Đáp án là '+q.ans+'.');L.msg={k:'no',t:'Mình cùng xem lời giải nhé.',d:ex};say([{t:'Mình cùng xem lời giải nhé. '+ex}])}}
   render()}
 function submit(){const q=L.qs[L.i];
+  if(q.type==='order'){if(L.picked.length<q.tokens.length)return;judge(L.picked.map(i=>q.tokens[i]).join(' ')===q.tokens.join(' '));return}
   if(q.type==='num'){if(L.input==='')return;judge(Number(L.input)===q.ans)}
   else{if(L.sel==null)return;judge(L.sel===q.ans)}}
 function next(){if(L.i<L.qs.length-1){L.i++;prep();render();autoRead()}
   else{const n=L.qs.length,st=stOf(L.id);
-    if(L.mode==='review'){L.pass=L.first>=Math.min(2,n);if(L.pass)st.r=1}
+    if(L.mode==='hard'){L.pass=L.first>=Math.ceil(n*0.6);if(L.pass)st.c=1}
+    else if(L.mode==='review'){L.pass=L.first>=Math.min(2,n);if(L.pass)st.r=1}
     else{L.pass=L.first>=Math.ceil(n*0.75);if(L.pass)st.p=1;(S.log[L.id]||(S.log[L.id]={r:0,w:0})).last=L.first+'/'+n}
     save();view='result';render();say([{t:L.pass?'Con làm tốt lắm!':'Con đã cố gắng rồi. Mình ôn lại một chút nhé.'}])}}
 function heard(alts){const q=L.qs[L.i];
@@ -472,12 +659,13 @@ function vHome(){const d=day();
   `<div class="row spread"><p class="note">Hôm nay con đã học ${mins(d.sec)} phút.</p><button class="back" data-act="gate">Bố mẹ</button></div>`}
 function vSubject(){const s=SUBJECTS.find(x=>x.id===subj);
   return bar('home','Trang đầu')+guide(`<b>${esc(s.name)}</b><br>Con chọn một bài nhé. Mỗi bài có 3 ngôi sao.`)+
-  `<div class="steps ${s.id}">`+s.topics.map((t,i)=>`<button class="lesson" data-act="topic" data-id="${t.id}"><span class="badge">${i+1}</span><span class="nm">${esc(t.name)}</span><span class="st" aria-label="${starCount(t.id)} trên 3 sao">${starsHtml(starCount(t.id),3)}</span></button>`).join('')+`</div>`}
+  `<div class="steps ${s.id}">`+s.topics.map((t,i)=>`<button class="lesson" data-act="topic" data-id="${t.id}"><span class="badge">${i+1}</span><span class="nm">${esc(t.name)}</span><span class="st" aria-label="${starCount(t.id)} trên 3 sao">${starsHtml(starCount(t.id),3)}${(S.st[t.id]||{}).c?' 🏆':''}</span></button>`).join('')+`</div>`}
 function vTopic(){const f=findTopic(topic),st=stOf(topic);const mark=x=>x?'<span>★</span>':'<span style="opacity:.5">☆</span>';
   return bar('subject-back',f.s.name)+guide(`<b>${esc(f.t.name)}</b><br>Mình nghe giảng trước, rồi ôn bài, rồi luyện tập nhé.`)+
   `<div class="steps ${f.s.id}"><button class="btn wide" data-act="learn"><span>1. Nghe giảng</span>${mark(st.l)}</button>
   <button class="btn wide" data-act="review"><span>2. Ôn bài (3 câu)</span>${mark(st.r)}</button>
-  <button class="btn wide" data-act="practice"><span>3. Luyện tập</span>${mark(st.p)}</button></div>`}
+  <button class="btn wide" data-act="practice"><span>3. Luyện tập</span>${mark(st.p)}</button>
+  <button class="btn wide" data-act="hard"><span>4. Thử thách</span><span ${st.c?'':'style="opacity:.45"'}>🏆</span></button></div>`}
 function vLearn(){const f=findTopic(topic),n=T.steps.length;let inner='';
   if(T.mode==='step'){const s=T.steps[T.i];
     const dots=T.steps.map((_,k)=>`<i class="${k<T.i?'done':k===T.i?'now':''}"></i>`).join('');
@@ -492,22 +680,25 @@ function vLesson(){const f=findTopic(L.id),q=L.qs[L.i],done=L.phase==='done';
   let body='';
   if(q.type==='num'){body=`<div class="answer" aria-live="polite">${esc(L.input)||'&nbsp;'}</div>`+(done?'':`<div class="keys">${[1,2,3,4,5,6,7,8,9].map(k=>`<button class="key" data-act="key" data-k="${k}">${k}</button>`).join('')}<button class="key" data-act="key" data-k="del" aria-label="Xoá">⌫</button><button class="key" data-act="key" data-k="0">0</button><span></span></div>`)}
   else if(q.type==='mc'||q.type==='pick'){body=`<div class="opts">${q._o.map(o=>`<button class="opt" data-act="sel" data-v="${esc(o.v)}" aria-pressed="${L.sel===o.v}" ${done?'disabled':''}>${o.big?`<span class="big">${o.big}</span>`:''}${esc(o.label)}</button>`).join('')}</div>`}
+  if(q.type==='order'){const left=q._o.filter(i=>!L.picked.includes(i));
+    body=`<div class="answer line" aria-live="polite">${L.picked.map((i,k)=>`<button class="tok on" data-act="unpick" data-k="${k}" ${done?'disabled':''}>${esc(q.tokens[i])}</button>`).join('')||'&nbsp;'}</div>`+(done?'':`<div class="chips">${left.map(i=>`<button class="tok" data-act="pick" data-i="${i}">${esc(q.tokens[i])}</button>`).join('')}</div>`)}
   const pic=q.pic?`<div class="pic" aria-hidden="true">${q.pic}</div>${q.cap?`<p class="center note">${esc(q.cap)}</p>`:''}`:'';
   const target=q.type==='say'?`<p class="word">${esc(q.target)}</p>`:'';
   let actions='';
   if(!done){
-    if(q.type==='say'){actions=`<button class="btn ghost" data-act="read">Nghe mẫu</button>${micOK?`<button class="btn" data-act="mic" ${listening?'disabled':''}>${listening?'Đang nghe…':'Bấm rồi nói'}</button>`:''}<button class="btn ${micOK?'ghost':''}" data-act="saydone">Con đọc xong rồi</button>`}
-    else{actions=`<button class="btn ghost" data-act="read">${q.mode==='listen'?'Nghe lại':'Nghe đề'}</button>${micOK?`<button class="btn ghost" data-act="mic" ${listening?'disabled':''}>${listening?'Đang nghe…':'Nói đáp án'}</button>`:''}<button class="btn" data-act="submit">Trả lời</button>`}
+    if(q.type==='say'){actions=`<button class="btn ghost" data-act="read">Nghe mẫu</button>${micOn()?`<button class="btn" data-act="mic" ${listening?'disabled':''}>${listening?'Đang nghe…':'Bấm rồi nói'}</button>`:''}<button class="btn ${micOn()?'ghost':''}" data-act="saydone">Con đọc xong rồi</button>`}
+    else{actions=`<button class="btn ghost" data-act="read">${q.mode==='listen'?'Nghe lại':'Nghe đề'}</button>${micOn()?`<button class="btn ghost" data-act="mic" ${listening?'disabled':''}>${listening?'Đang nghe…':'Nói đáp án'}</button>`:''}<button class="btn" data-act="submit">Trả lời</button>`}
   } else actions=`<button class="btn" data-act="next">${L.i<L.qs.length-1?'Câu tiếp':'Xem kết quả'}</button>`;
   const fb=L.msg?`<div class="fb ${L.msg.k}" role="status">${esc(L.msg.t)}${L.msg.d?`<span>${esc(L.msg.d)}</span>`:''}</div>`:'';
   return `<div class="bar"><button class="back" data-act="topic-back">← Bài học</button><div class="dots" aria-label="Câu ${L.i+1} trên ${L.qs.length}">${dots}</div></div>
-  <section class="sheet tint ${f.s.id}"><h3>${L.mode==='review'?'Ôn bài':'Luyện tập'} · ${esc(L.name)}</h3>
+  <section class="sheet tint ${f.s.id}"><h3>${L.mode==='review'?'Ôn bài':L.mode==='hard'?'Thử thách':'Luyện tập'} ·${esc(L.name)}</h3>
   ${q.passage?`<p class="passage">${esc(q.passage)}</p>`:''}
-  <p class="prompt ${q.sum?'sum':''}">${esc(q.q)}${q.sum?' = ?':''}</p>${pic}${target}${body}${fb}
+  <p class="prompt ${q.sum||q.big?'sum':''}">${esc(q.q)}${q.sum?' = ?':''}</p>${pic}${target}${body}${fb}
   <div class="row">${actions}</div>${voiceNote?`<p class="note">${esc(voiceNote)}</p>`:''}</section>`}
 function vResult(){const f=findTopic(L.id),n=L.qs.length;
+  if(L.mode==='hard')return bar('topic-back','Bài học')+guide(L.pass?'<b>Con thật là giỏi!</b><br>Con đã vượt qua thử thách và nhận được cúp.':'<b>Thử thách này khó thật.</b><br>Con thử lại nhé, mỗi lần câu hỏi sẽ khác.')+`<section class="sheet tint ${f.s.id}"><p class="score">${L.first}/${n} câu đúng ngay</p>${L.pass?'<p class="bigstars">🏆</p>':''}<div class="row mid"><button class="btn" data-act="hard">${L.pass?'Thử thách mới':'Thử lại'}</button><button class="btn ghost" data-act="subject-back">Chọn bài khác</button></div></section>`;
   const msg=L.pass?(L.mode==='review'?'<b>Con đã hiểu bài rồi!</b><br>Mình sang phần luyện tập nhé.':'<b>Con làm tốt lắm!</b><br>Con được thêm một ngôi sao cho bài này.'):(L.mode==='review'?'<b>Mình xem lại bài giảng nhé.</b><br>Nghe thêm một lần nữa là con sẽ hiểu.':'<b>Con đã cố gắng rồi.</b><br>Luyện thêm một lần nữa nhé.');
-  const btns=L.mode==='review'?(L.pass?`<button class="btn" data-act="practice">Luyện tập</button>`:`<button class="btn" data-act="learn">Nghe giảng lại</button><button class="btn ghost" data-act="review">Ôn lại</button>`):(L.pass?`<button class="btn" data-act="subject-back">Chọn bài khác</button>`:`<button class="btn" data-act="practice">Luyện lại</button><button class="btn ghost" data-act="learn">Nghe giảng lại</button>`);
+  const btns=L.mode==='review'?(L.pass?`<button class="btn" data-act="practice">Luyện tập</button>`:`<button class="btn" data-act="learn">Nghe giảng lại</button><button class="btn ghost" data-act="review">Ôn lại</button>`):(L.pass?`<button class="btn" data-act="hard">Làm thử thách</button><button class="btn ghost" data-act="subject-back">Chọn bài khác</button>`:`<button class="btn" data-act="practice">Luyện lại</button><button class="btn ghost" data-act="learn">Nghe giảng lại</button>`);
   return bar('topic-back','Bài học')+guide(msg)+`<section class="sheet tint ${f.s.id}"><p class="score">${L.first}/${n} câu đúng ngay</p><p class="bigstars" aria-label="${starCount(L.id)} trên 3 sao">${starsHtml(starCount(L.id),3)}</p><div class="row mid">${btns}</div></section>`}
 function vGate(){return `<section class="sheet"><h2>Dành cho bố mẹ</h2><p>Bố mẹ tính giúp: <b>${gate.a} × ${gate.b}</b></p>
   <div class="row"><input id="gate-in" type="number" inputmode="numeric" aria-label="Kết quả"><button class="btn small" data-act="gate-ok">Mở</button><button class="btn ghost small" data-act="home">Quay lại</button></div>${gate.err?'<p class="fb no">Chưa đúng, mời thử phép tính mới.</p>':''}</section>`}
@@ -529,12 +720,14 @@ function vParent(){const d=day();let rows='',weak=[],unc=[];
   return `<div class="bar"><h2>Trang của bố mẹ</h2><button class="back" data-act="home">← Về vở</button></div>
   <section class="sheet"><h3>Hôm nay</h3><p>${mins(d.sec)} phút học, ${d.stars} sao. Giới hạn hôm nay: ${S.set.cap+(d.extra||0)} phút.</p></section>
   <section class="sheet"><h3>Giọng đọc</h3>
-   <p class="note">Ứng dụng dùng giọng đọc cài sẵn trên máy và tự chọn giọng tốt nhất. Trên iPhone, iPad, bố mẹ tải thêm giọng "Nâng cao" trong Cài đặt, Trợ năng, Nội dung được đọc, Giọng nói để giọng tự nhiên hơn.</p>
+   <p class="note">Ứng dụng dùng giọng đọc cài sẵn trên máy và tự chọn giọng tốt nhất. Trên iPhone, iPad, bố mẹ tải thêm giọng "Nâng cao" trong Cài đặt, Trợ năng, Nội dung được đọc, Giọng nói để giọng tự nhiên và rõ hơn.</p>
+   <p class="note">Ứng dụng đã phát ở mức to nhất. Nếu tiếng nhỏ: bấm nút tăng âm lượng đúng lúc máy đang đọc. Trên iPhone, sau khi dùng micro tiếng có thể nhỏ đi; khi đó bố mẹ tắt mục "Bé nói để trả lời" bên dưới rồi mở lại ứng dụng.</p>
    ${hasVi?'':'<p class="fb no">Máy này chưa có giọng đọc tiếng Việt.</p>'}
    <div class="row"><label>Giọng tiếng Việt<select id="set-voice-vi">${vopt('vi',S.set.voiceVi)}</select></label><button class="btn ghost small" data-act="test-vi">Nghe thử</button></div>
    <div class="row"><label>Kiểu tiếng Anh<select id="set-accent"><option value="en-GB" ${S.set.accent==='en-GB'?'selected':''}>Anh-Anh (theo sách)</option><option value="en-US" ${S.set.accent==='en-US'?'selected':''}>Anh-Mỹ</option></select></label>
    <label>Giọng tiếng Anh<select id="set-voice-en">${vopt('en',S.set.voiceEn)}</select></label><button class="btn ghost small" data-act="test-en">Nghe thử</button></div>
    <div class="row"><label>Tốc độ đọc<select id="set-rate">${[[0.75,'Chậm'],[0.9,'Vừa'],[1,'Bình thường']].map(([v,n])=>`<option value="${v}" ${v==S.set.rate?'selected':''}>${n}</option>`).join('')}</select></label>
+   <label>Bé nói để trả lời<select id="set-mic"><option value="1" ${S.set.mic?'selected':''}>Bật</option><option value="0" ${S.set.mic?'':'selected'}>Tắt</option></select></label>
    <label>Tự đọc đề<select id="set-auto"><option value="1" ${S.set.auto?'selected':''}>Bật</option><option value="0" ${S.set.auto?'':'selected'}>Tắt</option></select></label></div>
    <p class="note">Micro để bé nói: ${micOK?'trình duyệt có hỗ trợ':'chưa dùng được ở đây, cần mở bằng Safari ở địa chỉ riêng'}.</p></section>
   <section class="sheet"><h3>Kết quả theo bài</h3>${rows?`<div class="scroll"><table><thead><tr><th>Môn</th><th>Bài</th><th class="n">Số câu</th><th class="n">Đúng ngay</th><th class="n">Sao</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<p class="note">Chưa có kết quả. Bảng này hiện sau khi bé làm bài đầu tiên.</p>'}
@@ -567,7 +760,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(
   else if(a==='topic'){topic=b.dataset.id;go('topic')}
   else if(a==='topic-back'){go('topic')}
   else if(a==='learn'){startLearn()}
-  else if(a==='review'||a==='practice'){startRound(a)}
+  else if(a==='review'||a==='practice'||a==='hard'){startRound(a)}
   else if(a==='say-step'){speakStep()}
   else if(a==='step-next'){if(T.i<T.steps.length-1){T.i++}else{T.mode='ask'}render();speakStep();window.scrollTo(0,0)}
   else if(a==='got-it'){stOf(topic).l=1;save();startRound('review')}
@@ -576,6 +769,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(
   else if(a==='alt-done'){T.mode='ask';render();speakStep()}
   else if(a==='key'){const k=b.dataset.k;if(k==='del')L.input=L.input.slice(0,-1);else if(L.input.length<3)L.input+=k;render()}
   else if(a==='sel'){L.sel=b.dataset.v;render()}
+  else if(a==='pick'){L.picked.push(Number(b.dataset.i));render()}
+  else if(a==='unpick'){L.picked.splice(Number(b.dataset.k),1);render()}
   else if(a==='submit'){submit()}
   else if(a==='next'){next()}
   else if(a==='read'){readQ()}
@@ -590,13 +785,13 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(
     try{navigator.clipboard.writeText(ta.value).then(()=>{msg.textContent='Đã sao chép.'}).catch(fall)}catch(x){fall()}}
   else if(a==='reset'){confirmReset=true;render()}
   else if(a==='reset-no'){confirmReset=false;render()}
-  else if(a==='reset-yes'){S.log={};S.days={};S.st={};S.unclear={};confirmReset=false;save();render()}
+  else if(a==='reset-yes'){S.log={};S.days={};S.st={};S.unclear={};for(const k in RECENT)delete RECENT[k];confirmReset=false;save();render()}
   else if(a==='break-end'){brk.hidden=true;brk.innerHTML=''}
 });
 document.addEventListener('change',e=>{const id=e.target.id,v=e.target.value;
   if(id==='set-session')S.set.session=Number(v);else if(id==='set-cap')S.set.cap=Number(v);
   else if(id==='set-rate')S.set.rate=Number(v);else if(id==='set-auto')S.set.auto=v==='1';
-  else if(id==='set-voice-vi')S.set.voiceVi=v;else if(id==='set-voice-en')S.set.voiceEn=v;
+  else if(id==='set-mic')S.set.mic=v==='1';else if(id==='set-voice-vi')S.set.voiceVi=v;else if(id==='set-voice-en')S.set.voiceEn=v;
   else if(id==='set-accent'){S.set.accent=v;S.set.voiceEn='';save();render();return}
   else return;
   save()});
